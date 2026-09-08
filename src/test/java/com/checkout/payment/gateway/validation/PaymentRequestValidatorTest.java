@@ -67,7 +67,7 @@ class PaymentRequestValidatorTest {
 
     List<String> errors = validator.validate(request);
 
-    assertThat(errors).contains("expiryMonth must be between 1 and 12");
+    assertThat(errors).contains("expiryMonth is required and must be between 1 and 12");
   }
 
   @Test
@@ -113,7 +113,7 @@ class PaymentRequestValidatorTest {
 
     List<String> errors = validator.validate(request);
 
-    assertThat(errors).contains("currency must be exactly 3 characters");
+    assertThat(errors).anyMatch(e -> e.contains("currency must be exactly 3 characters"));
   }
 
   @Test

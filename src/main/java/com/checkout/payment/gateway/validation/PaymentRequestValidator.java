@@ -51,12 +51,17 @@ public class PaymentRequestValidator {
   }
 
   private void validateExpiry(int expiryMonth, int expiryYear, List<String> errors) {
+    // expiryMonth and expiryYear are primitive int, not Integer, so a
+    // missing field from the merchant's JSON deserializes to 0 rather than
+    // null - there's no way to distinguish "not provided" from "provided
+    // as zero" here. That's why these floor checks double as both the
+    // "required" check and the "valid range" check at once.
     if (expiryMonth < 1 || expiryMonth > 12) {
-      errors.add("expiryMonth must be between 1 and 12");
+      errors.add("expiryMonth is required and must be between 1 and 12");
       // Don't attempt the future-date check against a month we know is invalid.
       return;
     }
-    if (expiryYear <= 0) {
+    if (expiryYear < 1) {
       errors.add("expiryYear is required");
       return;
     }
@@ -68,11 +73,11 @@ public class PaymentRequestValidator {
 
   private void validateCurrency(String currency, List<String> errors) {
     if (currency == null || currency.isEmpty()) {
-      errors.add("currency is required");
+      errors.add("currency is required and must be one of " + SUPPORTED_CURRENCIES);
       return;
     }
     if (currency.length() != 3) {
-      errors.add("currency must be exactly 3 characters");
+      errors.add("currency must be exactly 3 characters and one of " + SUPPORTED_CURRENCIES);
       return;
     }
     if (!SUPPORTED_CURRENCIES.contains(currency.toUpperCase())) {
