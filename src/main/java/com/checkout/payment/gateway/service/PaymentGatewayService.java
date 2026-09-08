@@ -43,7 +43,7 @@ public class PaymentGatewayService {
     List<String> validationErrors = validator.validate(request);
     if (!validationErrors.isEmpty()) {
       LOG.info("Payment rejected due to validation errors: {}", validationErrors);
-      return buildResponse(request, PaymentStatus.REJECTED);
+      return buildResponse(request, PaymentStatus.REJECTED, validationErrors);
     }
 
     // Design decision: a bank-unavailable failure (BankUnavailableException)
@@ -58,13 +58,17 @@ public class PaymentGatewayService {
         ? PaymentStatus.AUTHORIZED
         : PaymentStatus.DECLINED;
 
-    PostPaymentResponse response = buildResponse(request, status);
+    // No rejectionReasons here, deliberately: decline reasons come from the
+    // bank, not our own validation, and are not surfaced to the caller -
+    // see the comment on PostPaymentResponse.rejectionReasons.
+    PostPaymentResponse response = buildResponse(request, status, null);
     paymentsRepository.add(response);
     LOG.info("Payment {} processed with status {}", response.getId(), status);
     return response;
   }
 
-  private PostPaymentResponse buildResponse(PostPaymentRequest request, PaymentStatus status) {
+  private PostPaymentResponse buildResponse(PostPaymentRequest request, PaymentStatus status,
+      List<String> rejectionReasons) {
     PostPaymentResponse response = new PostPaymentResponse();
     response.setId(UUID.randomUUID());
     response.setStatus(status);
@@ -77,6 +81,7 @@ public class PaymentGatewayService {
     response.setExpiryYear(request.getExpiryYear());
     response.setCurrency(request.getCurrency());
     response.setAmount(request.getAmount());
+    response.setRejectionReasons(rejectionReasons);
     return response;
   }
 

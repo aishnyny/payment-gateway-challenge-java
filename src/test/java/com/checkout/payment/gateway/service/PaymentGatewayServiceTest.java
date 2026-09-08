@@ -51,13 +51,30 @@ class PaymentGatewayServiceTest {
 
   @Test
   void invalidRequestIsRejectedWithoutCallingTheBankOrSaving() {
-    when(validator.validate(any())).thenReturn(List.of("cardNumber is required"));
+    List<String> reasons = List.of("cardNumber is required");
+    when(validator.validate(any())).thenReturn(reasons);
 
     PostPaymentResponse response = service.processPayment(sampleRequest());
 
     assertThat(response.getStatus()).isEqualTo(PaymentStatus.REJECTED);
+    assertThat(response.getRejectionReasons()).isEqualTo(reasons);
     verify(bankClient, never()).authorize(any());
     verify(paymentsRepository, never()).add(any());
+  }
+
+  @Test
+  void declinedPaymentDoesNotExposeAnyRejectionReasons() {
+    // Deliberate distinction from a REJECTED response: decline reasons come
+    // from the bank, not our own validation, and are not surfaced to the
+    // caller - see the comment on PostPaymentResponse.rejectionReasons.
+    when(validator.validate(any())).thenReturn(List.of());
+    BankAuthorizationResponse bankResponse = new BankAuthorizationResponse();
+    bankResponse.setAuthorized(false);
+    when(bankClient.authorize(any())).thenReturn(bankResponse);
+
+    PostPaymentResponse response = service.processPayment(sampleRequest());
+
+    assertThat(response.getRejectionReasons()).isNull();
   }
 
   @Test

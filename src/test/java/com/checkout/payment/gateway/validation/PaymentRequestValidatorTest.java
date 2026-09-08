@@ -123,7 +123,7 @@ class PaymentRequestValidatorTest {
 
     List<String> errors = validator.validate(request);
 
-    assertThat(errors).contains("amount must be a positive integer");
+    assertThat(errors).contains("amount must be a positive number, greater than 0");
   }
 
   @Test
@@ -133,7 +133,7 @@ class PaymentRequestValidatorTest {
 
     List<String> errors = validator.validate(request);
 
-    assertThat(errors).contains("amount must be a positive integer");
+    assertThat(errors).contains("amount must be a positive number, greater than 0");
   }
 
   @Test

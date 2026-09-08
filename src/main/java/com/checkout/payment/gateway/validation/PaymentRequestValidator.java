@@ -90,7 +90,7 @@ public class PaymentRequestValidator {
     // it must be a positive value - a zero or negative payment doesn't
     // make sense, even though the README doesn't say this explicitly.
     if (amount <= 0) {
-      errors.add("amount must be a positive integer");
+      errors.add("amount must be a positive number, greater than 0");
     }
   }
 

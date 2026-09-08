@@ -1,6 +1,8 @@
 package com.checkout.payment.gateway.model;
 
 import com.checkout.payment.gateway.enums.PaymentStatus;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 import java.util.UUID;
 
 public class PostPaymentResponse {
@@ -11,6 +13,15 @@ public class PostPaymentResponse {
   private int expiryYear;
   private String currency;
   private int amount;
+  // Only ever populated when status is REJECTED. Deliberately not used for
+  // DECLINED - see DESIGN.md: rejection reasons describe our own input
+  // format rules and are safe to expose, but detailed decline reasons from
+  // the bank are a known card-testing attack vector and are not surfaced.
+  // @JsonInclude ensures this field is omitted from the JSON entirely when
+  // null, rather than showing up as "rejectionReasons": null on every
+  // Authorized/Declined response.
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private List<String> rejectionReasons;
 
 
   public UUID getId() {
@@ -69,9 +80,17 @@ public class PostPaymentResponse {
     this.amount = amount;
   }
 
+  public List<String> getRejectionReasons() {
+    return rejectionReasons;
+  }
+
+  public void setRejectionReasons(List<String> rejectionReasons) {
+    this.rejectionReasons = rejectionReasons;
+  }
+
   @Override
   public String toString() {
-    return "GetPaymentResponse{" +
+    return "PostPaymentResponse{" +
         "id=" + id +
         ", status=" + status +
         ", cardNumberLastFour=" + cardNumberLastFour +
@@ -79,6 +98,7 @@ public class PostPaymentResponse {
         ", expiryYear=" + expiryYear +
         ", currency='" + currency + '\'' +
         ", amount=" + amount +
+        ", rejectionReasons=" + rejectionReasons +
         '}';
   }
 }

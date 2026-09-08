@@ -85,6 +85,11 @@ That situation should never actually happen, so if it does, I want to know about
 For the Rejected path specifically, the card number itself might be *why* it got rejected.
 So I used a separate, safer version there that just returns a fallback instead of throwing, since that's an expected outcome, not a bug.
 
+**Rejected payments include the specific validation errors, but Declined payments don't include a reason.**
+When a payment is Rejected, the response includes exactly which rules it failed - things like card number length or an unsupported currency. That's just our own input format rules, so there's nothing sensitive about telling someone their request was malformed.
+Declined is different. That's a real decision the bank made about a specific card, and giving detailed reasons back for that is a known attack vector in payments - it's called card testing. If someone's trying to guess a stolen card's details, telling them exactly why each attempt failed (wrong CVV vs card not found vs insufficient funds) lets them narrow it down attempt by attempt. So I only ever expose reasons for Rejected, never for Declined.
+Worth noting: the bank simulator doesn't even give us a reason for a decline anyway, so this is somewhat moot here in practice - but it's the right call either way, and the kind of thing that matters a lot more once you're dealing with real cards.
+
 ## What I didn't do, on purpose
 
 **HTTPS.**
